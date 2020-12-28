@@ -19,30 +19,15 @@ pub use optional::*;
 #[macro_export]
 macro_rules! sequence {
     ($pd:expr, $pos:expr, {let $x:pat = $parser:expr; $($rest:tt)*}, $val:expr) => {
-        match $parser(&mut *$pd, $pos) {
-            $crate::Progress {
-                status: ::std::result::Result::Ok($x),
-                pos
-            } => {
-                sequence!($pd, pos, {$($rest)*}, $val)
-            },
-
-            $crate::Progress {
-                status: ::std::result::Result::Err(err),
-                pos
-            } => $crate::Progress {
-                status: ::std::result::Result::Err(err.into()),
-                pos
-            }
-        }
+        $crate::sequence_with!($pd, $pos, {let $x = $parser; $($rest)*}, |_, _| $val)
     };
 
     ($pd:expr, $pos:expr, {$parser:expr; $($rest:tt)*}, $val:expr) => {
-        sequence!($pd, $pos, {let _ = $parser; $($rest)*}, $val)
+        $crate::sequence_with!($pd, $pos, {let _ = $parser; $($rest)*}, |_, _| $val)
     };
 
     ($pd:expr, $pos:expr, {}, $val:expr) => {
-        $crate::Progress::success($pos, $val)
+        $crate::sequence_with!($pd, $pos, {}, |_, _| $val)
     };
 }
 
@@ -58,7 +43,7 @@ macro_rules! sequence_with {
                 status: ::std::result::Result::Ok($x),
                 pos
             } => {
-                sequence_with!($pd, pos, {$($rest)*}, $creator)
+                $crate::sequence_with!($pd, pos, {$($rest)*}, $creator)
             },
 
             $crate::Progress {
@@ -71,8 +56,8 @@ macro_rules! sequence_with {
         }
     };
 
-    ($pd:expr, $pos:expr, {$x:pat = $parser:expr; $($rest:tt)*}, $creator:expr) => {
-        sequence_with!($pd, $pos, {let _ = $parser; $($rest)*}, $creator)
+    ($pd:expr, $pos:expr, {$parser:expr; $($rest:tt)*}, $creator:expr) => {
+        $crate::sequence_with!($pd, $pos, {let _ = $parser; $($rest)*}, $creator)
     };
 
     ($pd:expr, $pos:expr, {}, $creator:expr) => {
