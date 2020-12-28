@@ -1,10 +1,15 @@
 [package]
 name = "pahs"
+description = "A pahsing (parsing) library"
 version = "0.1.0-alpha.0"
+
 license = "MIT OR Apache-2.0"
 authors = ["Dennis Duda <git@seri.tools>"]
 edition = "2018"
 keywords = ["parser"]
+homepage = "https://github.com/seritools/pahs"
+repository = "https://github.com/seritools/pahs.git"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -14,4 +19,3 @@ with_snafu = []
 [dependencies]
 paste = { version = "1" }
 snafu = { version = "0.6" }
-# smallvec = "1.5"
