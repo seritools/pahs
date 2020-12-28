@@ -76,12 +76,11 @@ where
     #[inline]
     pub fn finish(self) -> Progress<P, T, A::Accumulated> {
         let mut accumulator = self.err_accumulator;
-        self.current.unwrap().map_err_with_pos(|err, pos| {
-            // accumulate the last error as well
-            accumulator.add_err(err, pos);
 
-            accumulator.finish()
-        })
+        // accumulate the final progress
+        let progress = accumulator.add_progress(self.current.unwrap());
+
+        progress.map_err(|_| accumulator.finish())
     }
 }
 
