@@ -1,4 +1,4 @@
-//! Basic parsers for slices
+//! Basic parsers for slice data ([`SlicePos`](crate::SlicePos)).
 
 use snafu::Snafu;
 

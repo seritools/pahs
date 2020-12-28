@@ -1,70 +1,116 @@
-use crate::{ParseDriver, Pos, Progress, Recoverable};
+use crate::{ParseDriver, Pos, Progress};
 
-/// Runs the specified parser `count` times, returning all parsed values in a `Vec`.
+use super::Push;
+
+/// Runs the specified parser `n` times, returning all parsed values in a `Vec`.
 ///
-/// Don't need the parsed values? See [`skip_count`](skip_count).
+/// On failure, rewinds the position back to the initial position.
+///
+/// Note: This funtion pre-allocates the vector with the needed capacity for all `n` elements.
+/// See [`count_collect_into`](count_collect_into) if you want more control over how the parsed
+/// values are collected.
+///
+/// Don't need the parsed values at all? See [`skip_count`](skip_count).
 #[inline]
 pub fn count<P, T, E, F, S>(
-    count: usize,
-    mut parser: F,
+    n: usize,
+    parser: F,
 ) -> impl FnOnce(&mut ParseDriver<S>, P) -> Progress<P, Vec<T>, E>
 where
     P: Pos,
-    E: Recoverable,
     F: FnMut(&mut ParseDriver<S>, P) -> Progress<P, T, E>,
 {
-    move |pd, mut pos| {
-        let mut vec = Vec::with_capacity(count);
+    count_collect_into(n, move || Vec::with_capacity(n), parser)
+}
 
-        for _ in 0..count {
+/// Runs the specified parser `n` times, discarding the parsed values.
+///
+/// On failure, rewinds the position back to the initial position.
+#[inline]
+pub fn skip_count<P, T, E, F, S>(
+    n: usize,
+    parser: F,
+) -> impl FnOnce(&mut ParseDriver<S>, P) -> Progress<P, (), E>
+where
+    P: Pos,
+    F: FnMut(&mut ParseDriver<S>, P) -> Progress<P, T, E>,
+{
+    count_collect_into(n, || (), parser)
+}
+
+/// Runs the specified parser `n` times, collecting all values into the supplied [`Push`](Push)
+/// value.
+///
+/// On failure, rewinds the position back to the initial position.
+#[inline]
+pub fn count_collect_into<P, T, E, Fp, S, C, Fc>(
+    n: usize,
+    collection_builder: Fc,
+    mut parser: Fp,
+) -> impl FnOnce(&mut ParseDriver<S>, P) -> Progress<P, C, E>
+where
+    P: Pos,
+    Fp: FnMut(&mut ParseDriver<S>, P) -> Progress<P, T, E>,
+    C: Push<T>,
+    Fc: FnOnce() -> C,
+{
+    move |pd, mut pos| {
+        let mut collection = collection_builder();
+        let orig_pos = pos;
+
+        for _ in 0..n {
             match parser(pd, pos) {
                 Progress {
                     status: Ok(val),
                     pos: new_pos,
                 } => {
-                    vec.push(val);
+                    collection.push(val);
                     pos = new_pos;
                 }
 
                 Progress {
-                    status: Err(err),
-                    pos,
-                } => return Progress::failure(pos, err),
+                    status: Err(err), ..
+                } => return Progress::failure(orig_pos, err),
             }
         }
 
-        Progress::success(pos, vec)
+        Progress::success(pos, collection)
     }
 }
 
-/// Runs the specified parser `count` times, discarding the parsed values.
-#[inline]
-pub fn skip_count<P, T, E, F, S>(
-    count: usize,
-    mut parser: F,
-) -> impl FnOnce(&mut ParseDriver<S>, P) -> Progress<P, (), E>
-where
-    P: Pos,
-    E: Recoverable,
-    F: FnMut(&mut ParseDriver<S>, P) -> Progress<P, T, E>,
-{
-    move |pd, mut pos| {
-        for _ in 0..count {
-            match parser(pd, pos) {
-                Progress {
-                    status: Ok(_),
-                    pos: new_pos,
-                } => {
-                    pos = new_pos;
-                }
+#[cfg(test)]
+mod test {
+    use crate::slice::num::u8_le;
+    use crate::{BytePos, ParseDriver};
 
-                Progress {
-                    status: Err(err),
-                    pos,
-                } => return Progress::failure(pos, err),
-            }
-        }
+    use super::{count, skip_count};
 
-        Progress::success(pos, ())
+    #[test]
+    fn it_works() {
+        let input = &[0u8, 1, 2, 3, 4, 5, 6, 7, 8];
+        let pos = BytePos::new(input);
+        let pd = &mut ParseDriver::new();
+
+        let (new_pos, vec) = count(6, u8_le)(pd, pos).unwrap();
+        assert_eq!(new_pos.offset, 6);
+        assert_eq!(new_pos.s, &input[6..]);
+        assert_eq!(vec, &[0u8, 1, 2, 3, 4, 5]);
+
+        let (new_pos, _) = skip_count(6, u8_le)(pd, pos).unwrap();
+        assert_eq!(new_pos.offset, 6);
+        assert_eq!(new_pos.s, &input[6..]);
+    }
+
+    #[test]
+    fn it_rewinds_correctly_on_failure() {
+        let input = &[0u8, 1, 2, 3, 4, 5, 6, 7, 8];
+        let pos = BytePos::new(input);
+        let pd = &mut ParseDriver::new();
+
+        let (new_pos, _) = count(10, u8_le)(pd, pos).unwrap_err();
+        assert_eq!(new_pos.offset, 0);
+
+        let (new_pos, _) = skip_count(10, u8_le)(pd, pos).unwrap_err();
+        assert_eq!(new_pos.offset, 0);
     }
 }
