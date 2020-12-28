@@ -75,7 +75,83 @@ where
     /// Panics if no parser was run via [`one`](Alternate::one).
     #[inline]
     pub fn finish(self) -> Progress<P, T, A::Accumulated> {
-        let accumulator = self.err_accumulator;
-        self.current.unwrap().map_err(|_| accumulator.finish())
+        let mut accumulator = self.err_accumulator;
+        self.current.unwrap().map_err_with_pos(|err, pos| {
+            // accumulate the last error as well
+            accumulator.add_err(err, pos);
+
+            accumulator.finish()
+        })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::error_accumulator::AllErrorsAccumulator;
+    use crate::{BytePos, ParseDriver, Recoverable};
+
+    #[derive(Debug, PartialEq)]
+    pub struct TestError(bool);
+
+    impl Recoverable for TestError {
+        fn recoverable(&self) -> bool {
+            self.0
+        }
+    }
+
+    #[test]
+    fn it_returns_the_first_successful_branch() {
+        let input = &[0u8, 1, 2, 3, 4];
+        let pos = BytePos::new(input);
+        let pd = &mut ParseDriver::new();
+
+        let (res_pos, val) = pd
+            .alternate(pos)
+            .one(|_, pos| pos.failure(TestError(true)))
+            .one(|_, pos| pos.advance_by(1).success(0u8))
+            .one(|_, pos| pos.advance_by(2).success(1u8))
+            .finish()
+            .unwrap();
+
+        assert_eq!(res_pos.offset, 1usize);
+        assert_eq!(val, 0u8);
+    }
+
+    #[test]
+    fn it_stops_at_irrecoverable_errors() {
+        let input = &[0u8, 1, 2, 3, 4];
+        let pos = BytePos::new(input);
+        let pd = &mut ParseDriver::new();
+
+        let (res_pos, err) = pd
+            .alternate(pos)
+            .one(|_, pos| pos.failure(TestError(true)))
+            .one(|_, pos| pos.failure(TestError(false)))
+            .one(|_, pos| pos.advance_by(1).success(0u8))
+            .finish()
+            .unwrap_err();
+
+        assert_eq!(res_pos.offset, 0usize);
+        assert_eq!(err, TestError(false));
+    }
+
+    #[test]
+    fn it_accumulates_all_errors() {
+        let input = &[0u8, 1, 2, 3, 4];
+        let pos = BytePos::new(input);
+        let pd = &mut ParseDriver::new();
+
+        let (res_pos, err) = pd
+            .alternate_accumulate_errors(pos, AllErrorsAccumulator::new())
+            .one(|_, pos| pos.failure(TestError(true)))
+            .one(|_, pos| pos.failure(TestError(true)))
+            .one(|_, pos| pos.failure::<(), _>(TestError(false)))
+            .one(|_, pos| pos.failure(TestError(true)))
+            .finish()
+            .unwrap_err();
+
+        assert_eq!(res_pos.offset, 0usize);
+        // last branch won't run because the third one was irrecoverable
+        assert_eq!(err, &[TestError(true), TestError(true), TestError(false)]);
     }
 }
