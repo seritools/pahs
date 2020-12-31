@@ -1,13 +1,11 @@
-use crate::{ParseDriver, Pos, Progress};
-
-use super::Push;
+use crate::{ParseDriver, Pos, Progress, Push};
 
 /// Runs the specified parser `n` times, returning all parsed values in a `Vec`.
 ///
 /// On failure, rewinds the position back to the initial position.
 ///
 /// Note: This funtion pre-allocates the vector with the needed capacity for all `n` elements.
-/// See [`count_collect_into`](count_collect_into) if you want more control over how the parsed
+/// See [`count_push_into`](count_push_into) if you want more control over how the parsed
 /// values are collected.
 ///
 /// Don't need the parsed values at all? See [`skip_count`](skip_count).
@@ -20,7 +18,7 @@ where
     P: Pos,
     F: FnMut(&mut ParseDriver<S>, P) -> Progress<P, T, E>,
 {
-    count_collect_into(n, move || Vec::with_capacity(n), parser)
+    count_push_into(n, move || Vec::with_capacity(n), parser)
 }
 
 /// Runs the specified parser `n` times, discarding the parsed values.
@@ -35,19 +33,19 @@ where
     P: Pos,
     F: FnMut(&mut ParseDriver<S>, P) -> Progress<P, T, E>,
 {
-    count_collect_into(n, || (), parser)
+    count_push_into(n, || (), parser)
 }
 
-/// Runs the specified parser `n` times, collecting all values into the supplied [`Push`](Push)
+/// Runs the specified parser `n` times, pushing all values into the supplied [`Push`](Push)
 /// value.
 ///
 /// On failure, rewinds the position back to the initial position.
 #[inline]
-pub fn count_collect_into<P, T, E, Fp, S, C, Fc>(
+pub fn count_push_into<P, T, E, Fp, S, C, Fc>(
     n: usize,
-    collection_builder: Fc,
+    build_push: Fc,
     mut parser: Fp,
-) -> impl FnOnce(&mut ParseDriver<S>, P) -> Progress<P, C, E>
+) -> impl FnOnce(&mut ParseDriver<S>, P) -> Progress<P, C::Output, E>
 where
     P: Pos,
     Fp: FnMut(&mut ParseDriver<S>, P) -> Progress<P, T, E>,
@@ -55,7 +53,7 @@ where
     Fc: FnOnce() -> C,
 {
     move |pd, mut pos| {
-        let mut collection = collection_builder();
+        let mut coll = build_push();
         let orig_pos = pos;
 
         for _ in 0..n {
@@ -64,7 +62,7 @@ where
                     status: Ok(val),
                     pos: new_pos,
                 } => {
-                    collection.push(val);
+                    coll.push(val);
                     pos = new_pos;
                 }
 
@@ -74,7 +72,7 @@ where
             }
         }
 
-        Progress::success(pos, collection)
+        Progress::success(pos, coll.finish())
     }
 }
 

@@ -32,6 +32,7 @@ pub mod error_accumulator;
 mod parse_driver;
 mod pos;
 mod progress;
+mod push;
 pub mod slice;
 
 #[cfg(feature = "with_snafu")]
@@ -40,6 +41,7 @@ mod snafu;
 pub use self::parse_driver::ParseDriver;
 pub use self::pos::{BytePos, Pos, SlicePos};
 pub use self::progress::Progress;
+pub use self::push::Push;
 
 /// Indicates if an error allows a parent parser to recover and try something else.
 ///
