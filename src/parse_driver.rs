@@ -44,7 +44,7 @@ impl<S> ParseDriver<S> {
         E: Recoverable,
         F: FnOnce(&mut ParseDriver<S>, P) -> Progress<P, T, E>,
     {
-        optional(self, pos, parser)
+        optional(parser)(self, pos)
     }
 
     /// Tries all parsers supplied via [`one`](crate::combinators::Alternate::one), in order,
