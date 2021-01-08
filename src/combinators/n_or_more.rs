@@ -6,7 +6,7 @@ use crate::{ParseDriver, Pos, Progress, Push, Recoverable};
 pub fn one_or_more_push_into<P, T, E, Fp, S, C, Fc>(
     build_push: Fc,
     mut parser: Fp,
-) -> impl FnOnce(&mut ParseDriver<S>, P) -> Progress<P, C::Output, E>
+) -> impl FnOnce(&mut ParseDriver<S>, P) -> Progress<P, C, E>
 where
     P: Pos,
     E: Recoverable,
@@ -36,7 +36,7 @@ where
                     status: Err(err),
                 } if !err.recoverable() => return Progress::failure(pos, err),
 
-                _err => return Progress::success(curr_pos, coll.finish()),
+                _err => return Progress::success(curr_pos, coll),
             }
         }
     }
