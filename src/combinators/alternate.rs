@@ -87,7 +87,8 @@ where
 #[cfg(test)]
 mod test {
     use crate::error_accumulator::AllErrorsAccumulator;
-    use crate::{BytePos, ParseDriver, Recoverable};
+    use crate::slice::BytePos;
+    use crate::{ParseDriver, Recoverable};
 
     #[derive(Debug, PartialEq)]
     pub struct TestError(bool);

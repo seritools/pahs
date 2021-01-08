@@ -105,7 +105,7 @@ impl<P, T, E> Progress<P, T, E> {
         }
     }
 
-    /// Maps the failure value, if there is one.
+    /// Maps the error value, if there is one.
     ///
     /// If the current position is needed while mapping,
     /// see [`map_err_with_pos`](Progress::map_err_with_pos) instead.
@@ -120,7 +120,7 @@ impl<P, T, E> Progress<P, T, E> {
         }
     }
 
-    /// Maps the failure value, if there is one.
+    /// Maps the error value, if there is one.
     #[inline]
     pub fn map_err_with_pos<E2, F>(self, f: F) -> Progress<P, T, E2>
     where

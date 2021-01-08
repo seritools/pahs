@@ -39,7 +39,7 @@ pub mod slice;
 mod snafu;
 
 pub use self::parse_driver::ParseDriver;
-pub use self::pos::{BytePos, Pos, SlicePos};
+pub use self::pos::Pos;
 pub use self::progress::Progress;
 pub use self::push::Push;
 

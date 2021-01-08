@@ -1,10 +1,13 @@
-//! Basic parsers for slice data ([`SlicePos`](crate::SlicePos)).
+//! Parsers for slice data ([`SlicePos`](crate::slice::SlicePos)).
 
 use snafu::Snafu;
 
 pub mod num;
+mod pos;
 
-use crate::{ParseDriver, Progress, SlicePos};
+use crate::{ParseDriver, Progress};
+
+pub use self::pos::*;
 
 /// Matches the input slice against the `tag`, succeeding if both are equal.
 #[inline]
@@ -24,11 +27,16 @@ pub fn tag<'a, T: PartialEq, S>(
 }
 
 /// Errors that may happen when using [`tag`](tag).
-#[derive(Debug, Snafu)]
-#[snafu(visibility = "pub")]
+#[derive(Debug, Snafu, PartialEq, Eq)]
+#[snafu(visibility = "pub(crate)")]
 pub enum TagError {
     /// The input slice was too short.
     NotEnoughData,
     /// The tag didn't match.
     TagMismatch,
 }
+
+/// The input slice was too short.
+#[non_exhaustive]
+#[derive(Debug, Snafu, PartialEq, Eq)]
+pub struct NotEnoughDataError;

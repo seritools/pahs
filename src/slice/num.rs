@@ -1,18 +1,16 @@
 //! Parsers for different number types.
 
-use crate::{BytePos, Progress};
+use crate::Progress;
 
 macro_rules! impl_number {
     ($num:ident) => {
         paste::paste! {
             #[doc = "Parses a `" $num "` in little-endian encoding."]
-            #[doc = ""]
-            #[doc = "Fails only if not enough input data is available."]
             #[inline]
             pub fn [<$num _le>]<'a, S>(
                 _pd: &mut $crate::ParseDriver<S>,
-                pos: BytePos<'a>
-            ) -> Progress<BytePos<'a>, $num, ()> {
+                pos: $crate::slice::BytePos<'a>
+            ) -> Progress<$crate::slice::BytePos<'a>, $num, $crate::slice::NotEnoughDataError> {
                 pos
                     .take(::std::mem::size_of::<$num>())
                     .map(|n| {
@@ -24,13 +22,11 @@ macro_rules! impl_number {
             }
 
             #[doc = "Parses a `" $num "` in big-endian encoding."]
-            #[doc = ""]
-            #[doc = "Fails only if not enough input data is available."]
             #[inline]
             pub fn [<$num _be>]<'a, S>(
                 _pd: &mut $crate::ParseDriver<S>,
-                pos: BytePos<'a>
-            ) -> Progress<BytePos<'a>, $num, ()> {
+                pos: $crate::slice::BytePos<'a>
+            ) -> Progress<$crate::slice::BytePos<'a>, $num, $crate::slice::NotEnoughDataError> {
                 pos
                     .take(::std::mem::size_of::<$num>())
                     .map(|n| {
@@ -57,6 +53,7 @@ impl_number!(
 
 #[cfg(test)]
 mod test {
+    use crate::slice::{BytePos, NotEnoughDataError};
     use crate::ParseDriver;
 
     use super::*;
@@ -69,11 +66,11 @@ mod test {
 
         let expected_u64 = Progress {
             pos: p,
-            status: Err(()),
+            status: Err(NotEnoughDataError),
         };
         let expected_i8 = Progress {
             pos: p,
-            status: Err(()),
+            status: Err(NotEnoughDataError),
         };
 
         assert_eq!(u64_le(pd, p), expected_u64);

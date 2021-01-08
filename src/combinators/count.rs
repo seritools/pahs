@@ -79,7 +79,8 @@ where
 #[cfg(test)]
 mod test {
     use crate::slice::num::u8_le;
-    use crate::{BytePos, ParseDriver};
+    use crate::slice::BytePos;
+    use crate::ParseDriver;
 
     use super::{count, skip_count};
 
