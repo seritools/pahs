@@ -45,7 +45,7 @@ pub fn count_push_into<P, T, E, Fp, S, C, Fc>(
     n: usize,
     build_push: Fc,
     mut parser: Fp,
-) -> impl FnOnce(&mut ParseDriver<S>, P) -> Progress<P, C::Output, E>
+) -> impl FnOnce(&mut ParseDriver<S>, P) -> Progress<P, C, E>
 where
     P: Pos,
     Fp: FnMut(&mut ParseDriver<S>, P) -> Progress<P, T, E>,
@@ -72,7 +72,7 @@ where
             }
         }
 
-        Progress::success(pos, coll.finish())
+        Progress::success(pos, coll)
     }
 }
 
