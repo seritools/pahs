@@ -67,6 +67,19 @@ impl<'a, T> SlicePos<'a, T> {
             self.advance_by(count).success(matched)
         }
     }
+
+    /// Takes 1 element from the slice, advancing the slice position by that many elements.
+    ///
+    /// Fails if the input slice is empty.
+    #[inline]
+    pub fn take1(self) -> Progress<SlicePos<'a, T>, &'a T, NotEnoughDataError> {
+        if self.s.is_empty() {
+            self.failure(NotEnoughDataError)
+        } else {
+            let matched = &self.s[0];
+            self.advance_by(1).success(matched)
+        }
+    }
 }
 
 impl<'a, T> Pos for SlicePos<'a, T> {
