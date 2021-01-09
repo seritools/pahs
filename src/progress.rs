@@ -134,6 +134,19 @@ impl<P, T, E> Progress<P, T, E> {
         }
     }
 
+    /// Rewinds the position to `to` if the status indicates an error.
+    #[inline]
+    pub fn rewind_on_err(self, to: P) -> Self {
+        if self.status.is_err() {
+            Progress {
+                pos: to,
+                status: self.status,
+            }
+        } else {
+            self
+        }
+    }
+
     /// Returns the value and the current position on success,
     /// or resets the position and returns `None` on failure.
     #[inline]
