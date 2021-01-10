@@ -1,6 +1,25 @@
 use crate::{ParseDriver, Pos, Progress, Push, Recoverable};
 
-/// Runs the specified parser until it stops matching,
+/// Runs the specified parser until it stops matching (but at least once),
+/// collecting all values into a Vec.
+///
+/// Needs to run at least once to succeed.
+///
+/// See [`one_or_more_push_into`](one_or_more_push_into) if you want more control
+/// over how the parsed values are collected.
+#[inline]
+pub fn one_or_more<P, T, E, F, S>(
+    parser: F,
+) -> impl FnOnce(&mut ParseDriver<S>, P) -> Progress<P, Vec<T>, E>
+where
+    P: Pos,
+    E: Recoverable,
+    F: FnMut(&mut ParseDriver<S>, P) -> Progress<P, T, E>,
+{
+    one_or_more_push_into(Vec::new, parser)
+}
+
+/// Runs the specified parser until it stops matching (but at least once),
 /// collecting all values into the supplied [`Push`](Push) value.
 ///
 /// Needs to run at least once to succeed.
@@ -42,6 +61,23 @@ where
             }
         }
     }
+}
+
+/// Runs the specified parser until it stops matching,
+/// collecting all values into a Vec.
+///
+/// See [`zero_or_more_push_into`](zero_or_more_push_into) if you want more control
+/// over how the parsed values are collected.
+#[inline]
+pub fn zero_or_more<P, T, E, F, S>(
+    parser: F,
+) -> impl FnOnce(&mut ParseDriver<S>, P) -> Progress<P, Vec<T>, E>
+where
+    P: Pos,
+    E: Recoverable,
+    F: FnMut(&mut ParseDriver<S>, P) -> Progress<P, T, E>,
+{
+    zero_or_more_push_into(Vec::new, parser)
 }
 
 /// Runs the specified parser until it stops matching,
