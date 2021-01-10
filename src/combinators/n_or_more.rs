@@ -43,7 +43,7 @@ where
 
         let mut curr_pos = pos;
         loop {
-            match parser(pd, pos) {
+            match parser(pd, curr_pos) {
                 Progress {
                     pos,
                     status: Ok(val),
@@ -99,7 +99,7 @@ where
 
         let mut curr_pos = pos;
         loop {
-            match parser(pd, pos) {
+            match parser(pd, curr_pos) {
                 Progress {
                     pos,
                     status: Ok(val),
