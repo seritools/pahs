@@ -27,6 +27,24 @@ macro_rules! try_parse {
     };
 }
 
+macro_rules! opt_assert {
+    ($cond:expr $(,)?) => {
+        if cfg!(any(test, feature = "loop_assert")) {
+            assert!($cond);
+        } else {
+            debug_assert!($cond);
+        }
+    };
+
+    ($cond:expr, $($arg:tt)+) => {{}
+        if cfg!(any(test, feature = "loop_assert")) {
+            assert!($cond, $($arg)+)
+        } else {
+            debug_assert!($cond, $($arg)+);
+        }
+    };
+}
+
 pub mod combinators;
 pub mod error_accumulator;
 mod parse_driver;

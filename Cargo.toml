@@ -14,7 +14,9 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
+default = ["loop_assert"]
 with_snafu = []
+loop_assert = []
 
 [dependencies]
 paste = { version = "1" }

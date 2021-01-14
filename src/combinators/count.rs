@@ -52,18 +52,20 @@ where
     C: Push<T>,
     Fc: FnOnce() -> C,
 {
-    move |pd, mut pos| {
+    move |pd, mut curr_pos| {
         let mut coll = build_push();
-        let orig_pos = pos;
+        let orig_pos = curr_pos;
 
         for _ in 0..n {
-            match parser(pd, pos) {
+            match parser(pd, curr_pos) {
                 Progress {
                     status: Ok(val),
                     pos: new_pos,
                 } => {
+                    opt_assert!(new_pos != curr_pos, "parser did not progress");
+
                     coll.push(val);
-                    pos = new_pos;
+                    curr_pos = new_pos;
                 }
 
                 Progress {
@@ -72,7 +74,7 @@ where
             }
         }
 
-        Progress::success(pos, coll)
+        Progress::success(curr_pos, coll)
     }
 }
 

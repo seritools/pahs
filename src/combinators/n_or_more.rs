@@ -38,16 +38,19 @@ where
     move |pd, pos| {
         let mut coll = build_push();
 
-        let (pos, val) = try_parse!(parser(pd, pos));
+        let (pos_after_first, val) = try_parse!(parser(pd, pos));
+        opt_assert!(pos_after_first != pos, "parser did not progress");
         coll.push(val);
 
-        let mut curr_pos = pos;
+        let mut curr_pos = pos_after_first;
         loop {
             match parser(pd, curr_pos) {
                 Progress {
                     pos,
                     status: Ok(val),
                 } => {
+                    opt_assert!(curr_pos != pos, "parser did not progress");
+
                     coll.push(val);
                     curr_pos = pos;
                 }
@@ -104,6 +107,8 @@ where
                     pos,
                     status: Ok(val),
                 } => {
+                    opt_assert!(curr_pos != pos, "parser did not progress");
+
                     coll.push(val);
                     curr_pos = pos;
                 }
