@@ -57,10 +57,15 @@ impl<'a, T> SlicePos<'a, T> {
     /// Takes `len` elements from the slice, advancing the slice position by that many elements.
     ///
     /// Fails if more elements are requested than there are left in the input slice.
-    /// Also fails if zero elements are requested, in order to prevent infinite loops.
+    ///
+    /// Panics if zero elements are requested, in order to prevent infinite loops.
     #[inline]
     pub fn take(self, count: usize) -> Progress<SlicePos<'a, T>, &'a [T], NotEnoughDataError> {
-        if count == 0 || count > self.s.len() {
+        if count == 0 {
+            panic!("take called with count == 0");
+        }
+
+        if count > self.s.len() {
             self.failure(NotEnoughDataError)
         } else {
             let matched = &self.s[0..count];
