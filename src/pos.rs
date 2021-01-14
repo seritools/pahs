@@ -1,5 +1,5 @@
 /// A position in the parsed data
-pub trait Pos: Ord + Copy {
+pub trait Pos: Eq + Copy {
     /// The initial position
     fn zero() -> Self;
 }

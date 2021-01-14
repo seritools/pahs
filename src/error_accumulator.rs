@@ -153,7 +153,7 @@ where
 
 impl<P, E> ErrorAccumulator<P, E> for AllBestErrorsAccumulator<P, E>
 where
-    P: Pos,
+    P: Pos + Ord,
 {
     type Accumulated = Vec<E>;
 
