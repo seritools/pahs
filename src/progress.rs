@@ -137,7 +137,7 @@ impl<P, T, E> Progress<P, T, E> {
     /// Rewinds the position to `to` if the status indicates an error.
     #[inline]
     pub fn rewind_on_err(self, to: P) -> Self {
-        if self.status.is_err() {
+        if self.is_err() {
             Progress {
                 pos: to,
                 status: self.status,
@@ -198,5 +198,17 @@ impl<P, T, E> Progress<P, T, E> {
     #[inline]
     pub fn finish(self) -> (P, Result<T, E>) {
         (self.pos, self.status)
+    }
+
+    /// `true` if the status is `Ok`, `false` otherwise.
+    #[inline]
+    pub fn is_ok(&self) -> bool {
+        self.status.is_ok()
+    }
+
+    /// `true` if the status is `Err`, `false` otherwise.
+    #[inline]
+    pub fn is_err(&self) -> bool {
+        self.status.is_err()
     }
 }
