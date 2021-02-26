@@ -1,6 +1,6 @@
 [package]
-name = "pahs"
-description = "A pahsing (parsing) library"
+name = "pahs-snafu"
+description = "Helpers for using pahs together with snafu"
 version = "0.1.0-alpha.2"
 
 license = "MIT OR Apache-2.0"
@@ -9,17 +9,10 @@ edition = "2018"
 keywords = ["parser"]
 homepage = "https://github.com/seritools/pahs"
 repository = "https://github.com/seritools/pahs.git"
-readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[workspace]
-members = ["pahs-snafu"]
-
-[features]
-default = ["loop_assert"]
-loop_assert = []
-
 [dependencies]
-paste = "1"
 snafu = "0.6"
+easy-ext = "0.2.4"
+pahs = { path = "..", version = "0.1.0-alpha.2" }

@@ -14,6 +14,15 @@ pub struct Progress<P, T, E> {
 }
 
 impl<P, T, E> Progress<P, T, E> {
+    /// Creates a new `Progress` value from a position and a `Result`.
+    #[inline]
+    pub fn from_result(pos: P, result: Result<T, E>) -> Progress<P, T, E> {
+        Progress {
+            pos,
+            status: result,
+        }
+    }
+
     /// Creates a new `Progress` value indicating a successful parse.
     #[inline]
     pub fn success(pos: P, val: T) -> Progress<P, T, E> {
