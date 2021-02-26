@@ -40,6 +40,7 @@ jobs:
           args: --all -- -D warnings
 
   secondary:
+    needs: primary
     runs-on: ubuntu-latest
     strategy:
       matrix:
