@@ -38,7 +38,7 @@ where
     move |pd, pos| {
         let mut coll = build_push();
 
-        let (pos_after_first, val) = try_parse!(parser(pd, pos));
+        let (pos_after_first, val) = pahs!(parser(pd, pos));
         opt_assert!(pos_after_first != pos, "parser did not progress");
         coll.push(val);
 

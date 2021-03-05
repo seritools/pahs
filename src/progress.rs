@@ -46,7 +46,7 @@ impl<P, T, E> Progress<P, T, E> {
     /// If the current position is needed while mapping,
     /// see [`map_with_pos`](Progress::map_with_pos) instead.
     #[inline]
-    pub fn map<F, T2>(self, f: F) -> Progress<P, T2, E>
+    pub fn map<T2, F>(self, f: F) -> Progress<P, T2, E>
     where
         F: FnOnce(T) -> T2,
     {
@@ -58,7 +58,7 @@ impl<P, T, E> Progress<P, T, E> {
 
     /// Maps the success value, if there is one.
     #[inline]
-    pub fn map_with_pos<F, T2>(self, f: F) -> Progress<P, T2, E>
+    pub fn map_with_pos<T2, F>(self, f: F) -> Progress<P, T2, E>
     where
         F: FnOnce(T, P) -> T2,
         P: Clone,
@@ -219,5 +219,64 @@ impl<P, T, E> Progress<P, T, E> {
     #[inline]
     pub fn is_err(&self) -> bool {
         self.status.is_err()
+    }
+
+    /// Converts this progress into another by converting the value and error types into other ones.
+    #[inline]
+    pub fn to<T2, E2>(self) -> Progress<P, T2, E2>
+    where
+        T2: From<T>,
+        E2: From<E>,
+    {
+        Progress {
+            pos: self.pos,
+            status: match self.status {
+                Ok(t) => Ok(t.into()),
+                Err(e) => Err(e.into()),
+            },
+        }
+    }
+}
+
+impl<P, T, E> From<Result<(P, T), (P, E)>> for Progress<P, T, E> {
+    #[inline]
+    fn from(r: Result<(P, T), (P, E)>) -> Self {
+        match r {
+            Ok((p, t)) => Self {
+                pos: p,
+                status: Ok(t),
+            },
+            Err((p, e)) => Self {
+                pos: p,
+                status: Err(e),
+            },
+        }
+    }
+}
+
+impl<P, T, E> From<Progress<P, T, E>> for Result<(P, T), (P, E)> {
+    #[inline]
+    fn from(progress: Progress<P, T, E>) -> Self {
+        match progress {
+            Progress { pos, status: Ok(t) } => Ok((pos, t)),
+            Progress {
+                pos,
+                status: Err(e),
+            } => Err((pos, e)),
+        }
+    }
+}
+
+impl<P, T, E> From<Progress<P, T, E>> for (P, Result<T, E>) {
+    #[inline]
+    fn from(progress: Progress<P, T, E>) -> Self {
+        progress.finish()
+    }
+}
+
+impl<P, T, E> From<(P, Result<T, E>)> for Progress<P, T, E> {
+    #[inline]
+    fn from((pos, status): (P, Result<T, E>)) -> Self {
+        Self { pos, status }
     }
 }

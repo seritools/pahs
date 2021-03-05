@@ -6,7 +6,7 @@
 
 /// An analog to `try!`/`?`, but for `Progress`
 #[macro_export]
-macro_rules! try_parse {
+macro_rules! pahs {
     ($e:expr) => {
         match $e {
             $crate::Progress {
@@ -16,11 +16,11 @@ macro_rules! try_parse {
 
             $crate::Progress {
                 pos,
-                status: ::std::result::Result::Err(val),
+                status: ::std::result::Result::Err(e),
             } => {
                 return $crate::Progress {
                     pos,
-                    status: ::std::result::Result::Err(val.into()),
+                    status: ::std::result::Result::Err(::std::convert::From::from(e)),
                 }
             }
         }
@@ -52,9 +52,6 @@ mod pos;
 mod progress;
 mod push;
 pub mod slice;
-
-#[cfg(feature = "with_snafu")]
-mod snafu;
 
 pub use self::parse_driver::ParseDriver;
 pub use self::pos::Pos;

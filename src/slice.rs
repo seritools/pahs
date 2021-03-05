@@ -16,7 +16,7 @@ pub fn tag<'a, T: PartialEq, S>(
 ) -> impl Fn(&mut ParseDriver<S>, SlicePos<'a, T>) -> Progress<SlicePos<'a, T>, &'a [T], TagError> + 'a
 {
     move |_, pos| {
-        let (newpos, slice) = try_parse!(pos.take(tag.len()).map_err(|_| NotEnoughData.build()));
+        let (newpos, slice) = pahs!(pos.take(tag.len()).map_err(|_| NotEnoughData.build()));
 
         if slice == tag {
             newpos.success(slice)
