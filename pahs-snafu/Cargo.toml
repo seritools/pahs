@@ -14,4 +14,4 @@ repository = "https://github.com/seritools/pahs.git"
 
 [dependencies]
 snafu = "0.6"
-pahs = { path = "..", version = "0.1.0-alpha.3" }
+pahs = { path = "..", version = "^0.1.0-alpha.4"}
