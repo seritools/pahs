@@ -75,12 +75,12 @@ where
     /// Panics if no parser was run via [`one`](Alternate::one).
     #[inline]
     pub fn finish(self) -> Progress<P, T, A::Accumulated> {
-        let mut accumulator = self.err_accumulator;
+        let mut err_accumulator = self.err_accumulator;
 
         // accumulate the final progress
-        let progress = accumulator.add_progress(self.current.unwrap());
+        let progress = err_accumulator.add_progress(self.current.unwrap());
 
-        progress.map_err(|_| accumulator.finish())
+        progress.map_err(|_| err_accumulator.finish())
     }
 }
 

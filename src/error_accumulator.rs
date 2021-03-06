@@ -12,6 +12,9 @@ pub trait ErrorAccumulator<P, E> {
     /// Adds the specified error to the accumulation.
     fn add_err(&mut self, err: E, pos: P);
 
+    /// Consumes the accumulator, returning the accumulated errors.
+    fn finish(self) -> Self::Accumulated;
+
     /// Consumes and accumulates the error in the specified `Progress`, if any.
     #[inline]
     fn add_progress<T>(&mut self, progress: Progress<P, T, E>) -> Progress<P, T, ()>
@@ -29,9 +32,6 @@ pub trait ErrorAccumulator<P, E> {
             p @ Progress { .. } => p.map_err(|_| ()),
         }
     }
-
-    /// Consumes the accumulator, returning the accumulated errors.
-    fn finish(self) -> Self::Accumulated;
 }
 
 impl<P, E> ErrorAccumulator<P, E> for () {
@@ -120,7 +120,7 @@ impl<P, E> ErrorAccumulator<P, E> for AllErrorsAccumulator<E> {
 /// Accumulator that saves all "best" errors.
 ///
 /// "Best" is defined as errors that happen at the furthest position into the input data.
-/// If a "better" error is added, all previous errors are removed.
+/// If a "better" error is added, all previous errors are discarded.
 #[derive(Debug)]
 pub struct AllBestErrorsAccumulator<P, E> {
     pos: P,
@@ -170,7 +170,7 @@ where
                 self.errors.push(err);
             }
             Ordering::Equal => {
-                // multiple errors at the same point
+                // multiple errors at the same position
                 self.errors.push(err);
             }
         }
